@@ -1,5 +1,8 @@
 project(FastDTM)
-include_directories("/usr/local/Cellar/eigen/3.2.8")
+
+# set path to your Eigen installation here
+include_directories("/usr/local/eigen/3.2.8")
+
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 11)
 
