@@ -144,7 +144,7 @@ void DTM::initialize(bool init_with_lda) {
   for (size_t t = 0; t < T; t++) {
     for (size_t w = 0; w < V; w++) {
       for (size_t k = 0; k < K; k++) {
-        phi[t](w, k) = (CWK[t](w, k) + init_beta) / (CK(t, k) + V * init_beta);
+        phi[t](w, k) = (CWK[0](w, k) + init_beta) / (CK(0, k) + V * init_beta);
       }
       build_alias_table(t, w);
     }
@@ -221,8 +221,6 @@ void DTM::estimate(size_t num_iters) {
           float phi_sigma = 1.0 / ((1.0 / 100) + (1 / dtm_phi_var));
           prior_phi = phi[t + 1].col(k) * (phi_sigma / dtm_phi_var);
           prior_phi = ((2 * prior_phi) - 2 * phi[t].col(k)) / dtm_phi_var;
-//          prior_phi = (phi[t + 1].col(k) - phi[t].col(k) / dtm_phi_var)
-//              + (phi[t].col(k) / 100);
         } else if (t == T - 1) {
           prior_phi = (phi[t - 1].col(k) - phi[t].col(k)) / dtm_phi_var;
         } else {
@@ -239,29 +237,26 @@ void DTM::estimate(size_t num_iters) {
       // sample alpha
       VectorXf alpha_bar(K);
       float alpha_precision = 0.0;  // designed to be a diagonal matrix
-      float alpha_sigma = 0.0;
       MatrixXf cov = MatrixXf::Identity(K, K);
       if (t == 0) {
         alpha_precision = (1.0 / 100) + (1 / dtm_alpha_var);
-        alpha_sigma = 1.0 / alpha_precision;
+        float alpha_sigma = 1.0 / alpha_precision;
         alpha_bar = alpha.row(t+1) * (alpha_sigma / dtm_alpha_var);
       } else if (t == T-1) {
         alpha_bar = (alpha.row(t-1) - alpha.row(t)) / dtm_alpha_var;
-        alpha_sigma = dtm_alpha_var;
         alpha_precision = 1.0 / dtm_alpha_var;
       } else {
         alpha_precision = (2 / dtm_alpha_var);
-        alpha_sigma = dtm_alpha_var / 2;
         alpha_bar = (alpha.row(t+1) - alpha.row(t-1)) / 2;
       }
       VectorXf eta_bar = eta[t].colwise().sum();
-
       float sigma = 1.0 / (1.0 / alpha_precision + (D[t] / dtm_eta_var));
       cov *= sigma;
       mean = (alpha_bar / alpha_precision + (eta_bar / dtm_eta_var)) * sigma;
       alpha.row(t) = get_mvn_samples(mean, cov);
-      if (iter%5 == 0)
+      if (iter % 5 == 0) {
         diagnosis(t);
+      }
     }
   }
 }
@@ -308,7 +303,6 @@ void DTM::save_data(string dir) {
       }
       sort(ranking.begin(), ranking.end(),
            std::greater<pair<float, size_t>>());
-
       myfile << "Topic " << k << "\n";
       for (size_t v = 0; v < 10; v++) {
         size_t w = ranking[v].second;

@@ -1,5 +1,6 @@
 #include "dtm.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -15,8 +16,11 @@ int conf_error() {
 }
 
 int main(int argc, char* argv[]) {
-  if (argc < 2) {
-    cerr << "Usage: " << argv[0] << " <dtm.config path> " << endl;
+  if (argc != 11) {
+    cerr << "Usage: " << argv[0]
+         << " <dtm.config path> <num_topics> <SGLD_a> <SGLD_b> <SGLD_c> "
+         << "<phi_var> <eta_var> <alpha_var> <num_iter> <results_folder>"
+         << endl;
     return 1;
   }
   string line;
@@ -58,11 +62,20 @@ int main(int argc, char* argv[]) {
     cout << "Time Slice t = " << t << " Num docs: " << docs_t.size() << endl;
     docs[t] = docs_t;
   }
+  size_t num_topics = atoi(argv[2]);
+  float sgld_a = atof(argv[3]);
+  float sgld_b = atof(argv[4]);
+  float sgld_c = atof(argv[5]);
+  float phi_var = atof(argv[6]);
+  float eta_var = atof(argv[7]);
+  float alpha_var = atof(argv[8]);
+  size_t num_iters = atoi(argv[9]);
 
-  DTM dtm(docs, vocabulary, 40, 0.5, 100, 0.80, 0.1, 0.1, 0.1);
+  DTM dtm(docs, vocabulary, num_topics, sgld_a, sgld_b, sgld_c, phi_var,
+          eta_var, alpha_var);
   dtm.initialize(true);
-  dtm.estimate(50);
-  dtm.save_data("results");
+  dtm.estimate(num_iters);
+  dtm.save_data(argv[10]);
   return 0;
 }
 
