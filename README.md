@@ -10,7 +10,7 @@ This code has Eigen dependency. Before running this code, please make sure you u
 - [ ] Create a DTM python module that can be easily pip installed.
 
 ### License
-MIT
+<p>MIT</p>
 
 ### Reference
 
